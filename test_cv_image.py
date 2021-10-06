@@ -1,18 +1,14 @@
-import os
 import argparse
 import os
 import sys
 
 import cv2
-import matplotlib as plt
-import matplotlib.patches as patches
 import numpy as np
 import tensorflow as tf
-from skimage.measure import find_contours
 
 import mrcnn.model as modellib
-from mrcnn import config, visualize
-from mrcnn.visualize import random_colors, apply_mask
+from mrcnn import config
+from mrcnn.visualize import random_colors, apply_mask, display_instances
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -46,71 +42,51 @@ DEVICE = "/gpu:0"  # /cpu:0 or /gpu:0
 CLASS_NAMES = ['BG', 'knife', 'pistol', 'carabine']
 
 
-# def display_instances(image, boxes, masks, class_ids, class_names,
-#                       scores=None,
-#                       title="",
-#                       ax=None,
-#                       show_mask=True,
-#                       show_bbox=True,
-#                       colors=None,
-#                       captions=None):
-#     # Number of instances
-#     N = boxes.shape[0]
-#     if not N:
-#         print("\n*** No instances to display *** \n")
-#     else:
-#         assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
-#
-#     # Generate random colors
-#     colors = colors or random_colors(N)
-#
-#     # Show area outside image boundaries.
-#     cv2.imshow(title, image)
-#
-#     masked_image = image.astype(np.uint32).copy()
-#     for i in range(N):
-#         color = colors[i]
-#
-#         # Bounding box
-#         if not np.any(boxes[i]):
-#             # Skip this instance. Has no bbox. Likely lost in image cropping.
-#             continue
-#         y1, x1, y2, x2 = boxes[i]
-#         if show_bbox:
-#             p = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2,
-#                                   alpha=0.7, linestyle="solid",
-#                                   edgecolor=color, facecolor='none')
-#             ax.add_patch(p)
-#
-#         # Label
-#         if not captions:
-#             class_id = class_ids[i]
-#             score = scores[i] if scores is not None else None
-#             label = class_names[class_id]
-#             caption = "{} {:.3f}".format(label, score) if score else label
-#         else:
-#             caption = captions[i]
-#         ax.text(x1, y1 + 8, caption,
-#                 color='w', size=11, backgroundcolor="none")
-#
-#         # Mask
-#         mask = masks[:, :, i]
-#         if show_mask:
-#             masked_image = apply_mask(masked_image, mask, color)
-#
-#         # Mask Polygon
-#         # Pad to ensure proper polygons for masks that touch image edges.
-#         padded_mask = np.zeros(
-#             (mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
-#         padded_mask[1:-1, 1:-1] = mask
-#         contours = find_contours(padded_mask, 0.5)
-#         for verts in contours:
-#             # Subtract the padding and flip (y, x) to (x, y)
-#             verts = np.fliplr(verts) - 1
-#             p = patches.Polygon(verts, facecolor="none", edgecolor=color)
-#             ax.add_patch(p)
-#
-#     cv2.imshow(title, masked_image.astype(np.uint8))
+def visualize(frame, boxes, masks, class_ids, class_names, scores,
+              show_mask=True, colors=None, captions=None):
+    """
+    boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
+    masks: [height, width, num_instances]
+    class_ids: [num_instances]
+    class_names: list of class names of the dataset
+    scores: (optional) confidence scores for each box
+    title: (optional) Figure title
+    show_mask: To show masks and bounding boxes or not
+    colors: (optional) An array or colors to use with each object
+    captions: (optional) A list of strings to use as captions for each object
+    """
+    boxes_count = boxes.shape[0]
+    assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
+
+    # Generate random colors
+    colors = colors or random_colors(len(class_names))
+
+    masked_frame = frame.copy()
+    for i in range(boxes_count):
+        y1, x1, y2, x2 = boxes[i]
+
+        # Label
+        if not captions:
+            score = scores[i] if scores is not None else None
+            label = class_names[class_ids[i]]
+            caption = "{} {:.3f}".format(label, score) if score else label
+        else:
+            caption = captions[i]
+
+        color = colors[i]
+        font_name = cv2.FONT_HERSHEY_DUPLEX
+        font_size = 0.7
+        thickness = 2
+
+        if show_mask:
+            masked_frame = apply_mask(masked_frame, masks[:, :, i], color, alpha=0.6)
+
+        rgb_color = [int(c) * 255 for c in color]
+
+        cv2.rectangle(masked_frame, (x1, y1), (x2, y2), rgb_color, thickness)
+        cv2.putText(masked_frame, caption, (x1, y1), font_name, font_size, rgb_color)
+
+    return masked_frame
 
 
 class InferenceConfig(config.Config):
@@ -134,17 +110,15 @@ with tf.device(DEVICE):
 # Load image
 image = cv2.imread(IMAGE_PATH)
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
 print("Image loaded, path:", IMAGE_PATH)
 
 result = model.detect([image_rgb], verbose=1)[0]
 
 # Visualize results
-ax = visualize.display_instances(image_rgb,
-                  result['rois'],
-                  result['masks'],
-                  result['class_ids'],
-                  CLASS_NAMES,
-                  result['scores'])
+result_image = visualize(image, result['rois'], result['masks'], result['class_ids'], CLASS_NAMES, result['scores'])
+
+cv2.imshow("MRCNN Image", result_image)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
