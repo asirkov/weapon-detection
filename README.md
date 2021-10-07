@@ -2,7 +2,7 @@
 
 ## Running detection script:
 
-For running script on image need to run `test_cv_image.py` file
+For running script on image need to run `test_cv_image_gpu.py` file
 Parameters:
 - `-w --weights`: required, relative path to weights file for MRCNN network
 - `-i --in`: required, relative path to image file (files from URLs does not supports yet)
@@ -19,16 +19,4 @@ python -w logs/mask_rcnn_object_0010.h5 -i test/18e830f6c64b25a5090685a7b7ea3c04
 For run script on CPU instead of GPU:
 
 - Install `tensorflow` instead of `tensorflow-gpu` (also for suppress warnings change `tensorflow-gpu==1.15.2` to `tensorflow==1.15.2` in `requirements.txt`)
-- Remove code that checking GPU device:
-
-    ```python
-    os.environ["CUDA_VISIBLE_DEVICES"] = '0'
-
-    DEVICE = "/device:GPU:0"  # /CPU:0 or /device:GPU:0
-    
-    device_name = tf.test.gpu_device_name()
-    if device_name != DEVICE:
-        raise SystemError('GPU device not found')
-    
-    print('Found GPU at: {}'.format(device_name))
-    ```
+- Instead of `test_cv_image_gpu.py` run `test_cv_image_cpu.py`, it will not check the GPU device
