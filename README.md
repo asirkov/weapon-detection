@@ -1,5 +1,8 @@
 # Training Mask RCNN model for weapon detection
 
+Data for training stored in Google Drive
+https://drive.google.com/drive/folders/1-RxOIuePdoR9iBdt3hYbAtZACkFlKZZk
+
 ## Running detection script:
 
 For running script on image need to run `test_cv_image_gpu.py` file
