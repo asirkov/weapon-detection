@@ -29,7 +29,8 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--weights", required=True, help="relative path to model weights file")
-ap.add_argument("-i", "--image", required=True, help="relative path to input image")
+ap.add_argument("-i", "--in", required=True, help="relative path to input image")
+ap.add_argument("-o", "--out", required=False, help="relative path to output image (path should be exists)")
 args = vars(ap.parse_args())
 
 # Path to weights file
@@ -38,10 +39,12 @@ if not os.path.exists(WEIGHTS_PATH):
     raise FileNotFoundError(WEIGHTS_PATH)
 
 # Path to image
-IMAGE_PATH = os.path.join(ROOT_DIR, *os.path.split(args["image"]))
-if not os.path.exists(IMAGE_PATH):
-    raise FileNotFoundError(IMAGE_PATH)
+IN_PATH = os.path.join(ROOT_DIR, *os.path.split(args["in"]))
+if not os.path.exists(IN_PATH):
+    raise FileNotFoundError(IN_PATH)
 
+WITH_OUTPUT = args["out"] is not None
+OUT_PATH = os.path.join(ROOT_DIR, *os.path.split(args["out"])) if WITH_OUTPUT else None
 
 CLASS_NAMES = ['BG', 'knife', 'pistol', 'carabine']
 
@@ -112,10 +115,10 @@ model.load_weights(WEIGHTS_PATH, by_name=True)
 print("Weights loaded, path:", WEIGHTS_PATH)
 
 # Load image
-image = cv2.imread(IMAGE_PATH)
+image = cv2.imread(IN_PATH)
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-print("Image loaded, path:", IMAGE_PATH)
+print("Image loaded, path:", IN_PATH)
 
 result = model.detect([image_rgb], verbose=1)[0]
 
@@ -126,3 +129,9 @@ cv2.imshow("MRCNN Image", result_image)
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+if WITH_OUTPUT:
+    if cv2.imwrite(OUT_PATH, result_image):
+        print("Image saved, path:", OUT_PATH)
+    else:
+        print("Failed to save image, path:", OUT_PATH)
