@@ -26,12 +26,9 @@ print('Found GPU at: {}'.format(device_name))
 ROOT_DIR = os.getcwd()
 sys.path.append(ROOT_DIR)  # To find local version of the library
 
-MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
 ap = argparse.ArgumentParser()
 ap.add_argument("-w", "--weights", required=True, help="relative path to model weights file")
-ap.add_argument("-i", "--in", required=True, help="relative path to input image")
-ap.add_argument("-o", "--out", required=False, help="relative path to output image (path should be exists)")
+ap.add_argument("-i", "--in", required=True, help="relative path to input video")
 args = vars(ap.parse_args())
 
 # Path to weights file
@@ -39,40 +36,51 @@ WEIGHTS_PATH = os.path.join(ROOT_DIR, *os.path.split(args["weights"]))
 if not os.path.exists(WEIGHTS_PATH):
     raise FileNotFoundError(WEIGHTS_PATH)
 
-# Path to image
+# Path to video
 IN_PATH = os.path.join(ROOT_DIR, *os.path.split(args["in"]))
 if not os.path.exists(IN_PATH):
     raise FileNotFoundError(IN_PATH)
 
-WITH_OUT = args["out"] is not None
-OUT_PATH = os.path.join(ROOT_DIR, *os.path.split(args["out"])) if WITH_OUT else None
-
 
 # Create model in inference mode
-model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=core.InferenceConfig())
+model = modellib.MaskRCNN(mode="inference", model_dir=WEIGHTS_PATH, config=core.InferenceConfig08())
 
 model.load_weights(WEIGHTS_PATH, by_name=True)
 print("Weights loaded, path:", WEIGHTS_PATH)
 
-# Load image
-image = cv2.imread(IN_PATH)
-image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# Load video
+cap = cv2.VideoCapture(IN_PATH)
+print("Video loaded, path:", IN_PATH)
 
-print("Image loaded, path:", IN_PATH)
 
-result = model.detect([image_rgb], verbose=1)[0]
+COLORS = core.get_colors()
 
-# Visualize results
-result_image = core.visualize(image, result['rois'], result['masks'], result['class_ids'], result['scores'])
+FRAME_NUMBER = 0
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
 
-cv2.imshow("MRCNN Image", result_image)
+    if FRAME_NUMBER % 5 == 0:
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-cv2.waitKey(0)
+        result = model.detect([frame_rgb], verbose=0)[0]
+
+        # Visualize results
+        result_frame = core.visualize(frame,
+                                      result['rois'],
+                                      result['masks'],
+                                      result['class_ids'],
+                                      result['scores'],
+                                      colors=COLORS)
+
+        scaled_result_frame = cv2.resize(result_frame, (640, 480))
+        cv2.imshow('RCNN Video', scaled_result_frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+    FRAME_NUMBER += 1
+
+cap.release()
 cv2.destroyAllWindows()
-
-# If there is output file try to save result
-if WITH_OUT:
-    if cv2.imwrite(OUT_PATH, result_image):
-        print("Image saved, path:", OUT_PATH)
-    else:
-        print("Failed to save image, path:", OUT_PATH, file=sys.stderr)

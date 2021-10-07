@@ -1,36 +1,21 @@
-import argparse
-import os
-import sys
-
 import cv2
-import tensorflow as tf
 
-import mrcnn.model as modellib
 from mrcnn import config
 from mrcnn.visualize import random_colors, apply_mask
-
 
 CLASS_NAMES = ['BG', 'knife', 'pistol', 'carabine']
 
 
-def visualize(frame, boxes, masks, class_ids, class_names, scores,
-              show_mask=True, colors=None, captions=None):
-    """
-    boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
-    masks: [height, width, num_instances]
-    class_ids: [num_instances]
-    class_names: list of class names of the dataset
-    scores: (optional) confidence scores for each box
-    title: (optional) Figure title
-    show_mask: To show masks and bounding boxes or not
-    colors: (optional) An array or colors to use with each object
-    captions: (optional) A list of strings to use as captions for each object
-    """
+def get_colors():
+    return random_colors(len(CLASS_NAMES))
+
+
+def visualize(frame, boxes, masks, class_ids, scores, show_mask=True, colors=None, captions=None):
     boxes_count = boxes.shape[0]
     assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
 
     # Generate random colors
-    colors = colors or random_colors(len(class_names))
+    colors = colors or random_colors(len(CLASS_NAMES))
 
     masked_frame = frame.copy()
     for i in range(boxes_count):
@@ -39,7 +24,7 @@ def visualize(frame, boxes, masks, class_ids, class_names, scores,
         # Label
         if not captions:
             score = scores[i] if scores is not None else None
-            label = class_names[class_ids[i]]
+            label = CLASS_NAMES[class_ids[i]]
             caption = "{} {:.3f}".format(label, score) if score else label
         else:
             caption = captions[i]
@@ -69,5 +54,53 @@ class InferenceConfig(config.Config):
     # Run detection on one image at a time
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
+    DETECTION_MIN_CONFIDENCE = 0.9
+
+
+class InferenceConfig07(config.Config):
+    NAME = "object"
+
+    # Number of classes (including background)
+    NUM_CLASSES = len(CLASS_NAMES)
+
+    # Run detection on one image at a time
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
+    DETECTION_MIN_CONFIDENCE = 0.7
+
+
+class InferenceConfig08(config.Config):
+    NAME = "object"
+
+    # Number of classes (including background)
+    NUM_CLASSES = len(CLASS_NAMES)
+
+    # Run detection on one image at a time
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 1
+    DETECTION_MIN_CONFIDENCE = 0.7
+
+
+class InferenceConfigBatch2(config.Config):
+    NAME = "object"
+
+    # Number of classes (including background)
+    NUM_CLASSES = len(CLASS_NAMES)
+
+    # Run detection on one image at a time
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 2
+    DETECTION_MIN_CONFIDENCE = 0.9
+
+
+class InferenceConfigBatch3(config.Config):
+    NAME = "object"
+
+    # Number of classes (including background)
+    NUM_CLASSES = len(CLASS_NAMES)
+
+    # Run detection on one image at a time
+    GPU_COUNT = 1
+    IMAGES_PER_GPU = 3
     DETECTION_MIN_CONFIDENCE = 0.9
 
