@@ -3,18 +3,26 @@ import os
 import sys
 
 import cv2
-import numpy as np
 import tensorflow as tf
 
 import mrcnn.model as modellib
 from mrcnn import config
-from mrcnn.visualize import random_colors, apply_mask, display_instances
+from mrcnn.visualize import random_colors, apply_mask
 
-tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+
+DEVICE = "/device:GPU:0"  # /CPU:0 or /device:GPU:0
+
+device_name = tf.test.gpu_device_name()
+if device_name != DEVICE:
+    raise SystemError('GPU device not found')
+
+print('Found GPU at: {}'.format(device_name))
 
 # Root directory of the project
-ROOT_DIR = os.path.abspath(".")
+ROOT_DIR = os.getcwd()
 sys.path.append(ROOT_DIR)  # To find local version of the library
 
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
@@ -34,10 +42,6 @@ IMAGE_PATH = os.path.join(ROOT_DIR, *os.path.split(args["image"]))
 if not os.path.exists(IMAGE_PATH):
     raise FileNotFoundError(IMAGE_PATH)
 
-TEST_MODE = "inference"
-
-# Device to load the neural network on.
-DEVICE = "/gpu:0"  # /cpu:0 or /gpu:0
 
 CLASS_NAMES = ['BG', 'knife', 'pistol', 'carabine']
 
@@ -84,7 +88,7 @@ def visualize(frame, boxes, masks, class_ids, class_names, scores,
         rgb_color = [int(c) * 255 for c in color]
 
         cv2.rectangle(masked_frame, (x1, y1), (x2, y2), rgb_color, thickness)
-        cv2.putText(masked_frame, caption, (x1, y1), font_name, font_size, rgb_color)
+        cv2.putText(masked_frame, caption, (x1, (y1 - 10 if y1 > 0 else y1 + 20)), font_name, font_size, rgb_color)
 
     return masked_frame
 
@@ -102,10 +106,10 @@ class InferenceConfig(config.Config):
 
 
 # Create model in inference mode
-with tf.device(DEVICE):
-    model = modellib.MaskRCNN(mode=TEST_MODE, model_dir=MODEL_DIR, config=InferenceConfig())
-    model.load_weights(WEIGHTS_PATH, by_name=True)
-    print("Weights loaded, path:", WEIGHTS_PATH)
+model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=InferenceConfig())
+
+model.load_weights(WEIGHTS_PATH, by_name=True)
+print("Weights loaded, path:", WEIGHTS_PATH)
 
 # Load image
 image = cv2.imread(IMAGE_PATH)
