@@ -134,4 +134,4 @@ if WITH_OUTPUT:
     if cv2.imwrite(OUT_PATH, result_image):
         print("Image saved, path:", OUT_PATH)
     else:
-        print("Failed to save image, path:", OUT_PATH)
+        print("Failed to save image, path:", OUT_PATH, file=sys.stderr)
