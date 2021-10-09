@@ -6,7 +6,7 @@ import cv2
 
 import mrcnn.model as modellib
 import test_cv_core as core
-from test_cv_core import CLASS_NAMES
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -52,7 +52,7 @@ print("Image loaded, path:", IN_PATH)
 result = model.detect([image_rgb], verbose=1)[0]
 
 # Visualize results
-result_image = core.visualize(image, result['rois'], result['masks'], result['class_ids'], CLASS_NAMES, result['scores'])
+result_image = core.visualize(image, result['rois'], result['masks'], result['class_ids'], result['scores'])
 
 cv2.imshow("MRCNN Image", result_image)
 
