@@ -133,3 +133,6 @@ dmypy.json
 
 # IDEA files
 /.idea/**
+
+# Temporary files
+/tmp
