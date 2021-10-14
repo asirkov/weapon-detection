@@ -33,7 +33,7 @@ For running test script on image using CPU instead of GPU:
 - Install `tensorflow` instead of `tensorflow-gpu` (also for suppress warnings change `tensorflow-gpu==1.15.2` to `tensorflow==1.15.2` in `requirements.txt`)
 - Instead of `test_cv_image_gpu.py` run `test_cv_image_cpu.py`, it will not check the GPU device
 
-*NOTE: if you use `tensorflow-gpu` GPU will be used event if you run `test_cv_image_cpu.py` *
+*NOTE: if you use `tensorflow-gpu` GPU will be used event if you run `test_cv_image_cpu.py`*
 
 ### Video, GPU
 
