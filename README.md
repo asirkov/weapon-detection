@@ -23,7 +23,7 @@ if the path contains some internal directories, they must exist, for example, fo
 
 Example:
 ```shell script
-python -w weights/mask_rcnn_object_0010.h5 -i test/18e830f6c64b25a5090685a7b7ea3c041.jpg -o out/out6.jpg
+python test_image_gpu.py -w weights/mask_rcnn_object_0010.h5 -i test/18e830f6c64b25a5090685a7b7ea3c041.jpg -o out/out6.jpg
 ```
 
 ### Image, CPU:
@@ -46,5 +46,5 @@ if the path contains some internal directories, they must exist, for example, fo
 
 Example:
 ```shell script
-python -w weights/mask_rcnn_object_0010.h5 -i video/knife.mp4 -o out/knife_out.avi
+python test_video_gpu.py -w weights/mask_rcnn_object_0010.h5 -i video/knife.mp4 -o out/knife_out.avi
 ```
