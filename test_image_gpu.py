@@ -7,7 +7,7 @@ import tensorflow as tf
 
 import mrcnn.model as modellib
 
-import core as core
+import core
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'

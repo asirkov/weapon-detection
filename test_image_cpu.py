@@ -4,12 +4,10 @@ import sys
 
 import cv2
 
+import core
 import mrcnn.model as modellib
-import test_core as core
-
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 
 # Root directory of the project
 ROOT_DIR = os.getcwd()
@@ -35,7 +33,6 @@ if not os.path.exists(IN_PATH):
 
 WITH_OUTPUT = args["out"] is not None
 OUT_PATH = os.path.join(ROOT_DIR, *os.path.split(args["out"])) if WITH_OUTPUT else None
-
 
 # Create model in inference mode
 model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=core.InferenceConfig09())
