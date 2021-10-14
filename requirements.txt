@@ -12,3 +12,4 @@ ipython==7.16.1
 
 scikit-image==0.17.2
 opencv-python==4.5.3.56
+imagesize==1.2.0

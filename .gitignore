@@ -128,11 +128,11 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Weights files
-*.h5
-
 # IDEA files
 /.idea/**
 
 # Temporary files
-/tmp
+/tmp/**
+/logs/**
+/dataset/**
+*.h5
